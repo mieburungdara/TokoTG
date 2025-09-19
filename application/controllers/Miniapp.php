@@ -13,4 +13,13 @@ class Miniapp extends MY_Controller {
     {
         $this->load->view('miniapp');
     }
+
+    /**
+     * Renders the marketplace page for the Mini App.
+     */
+    public function marketplace()
+    {
+        $data['is_miniapp_page'] = true;
+        $this->render('marketplace/index', $data);
+    }
 }

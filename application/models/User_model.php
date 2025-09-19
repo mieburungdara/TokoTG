@@ -18,32 +18,37 @@ class User_model extends CI_Model {
             return null; // Or handle error appropriately
         }
 
-        $id = $user_data['id'];
+        $telegram_id = $user_data['id'];
 
-        $query = $this->db->get_where('user', array('id' => $id));
-        $user = $query->row_array();
+        // Check if user exists in our 'users' table
+        $this->db->where('user_id', $telegram_id);
+        $query = $this->db->get('users');
+        $existing_user = $query->row_array();
 
-        if ($user) {
-            // User found, return user data
-            return $user;
+        // Prepare data from Telegram to be inserted or updated
+        $data_to_upsert = [
+            'first_name'    => $user_data['first_name'] ?? '',
+            'last_name'     => $user_data['last_name'] ?? null,
+            'username'      => $user_data['username'] ?? null,
+            'language_code' => $user_data['language_code'] ?? null,
+        ];
+
+        if ($existing_user) {
+            // User found, update their data
+            $this->db->where('user_id', $telegram_id);
+            $this->db->update('users', $data_to_upsert);
         } else {
             // User not found, create a new user
-            $new_user_data = array(
-                'id' => $id,
-                'first_name'  => isset($user_data['first_name']) ? $user_data['first_name'] : '',
-                'last_name'   => isset($user_data['last_name']) ? $user_data['last_name'] : null,
-                'username'    => isset($user_data['username']) ? $user_data['username'] : null,
-                'chat_id'     => isset($user_data['chat_id']) ? $user_data['chat_id'] : null,
-                'created_at'  => date('Y-m-d H:i:s'),
-                'updated_at'  => date('Y-m-d H:i:s'),
+            $data_to_insert = array_merge(
+                ['user_id' => $telegram_id],
+                $data_to_upsert
             );
-
-            $this->db->insert('user', $new_user_data);
-
-            // Return the newly created user's data
-            $query = $this->db->get_where('user', array('id' => $id));
-            return $query->row_array();
+            $this->db->insert('users', $data_to_insert);
         }
+
+        // Return the final user record from our database
+        $this->db->where('user_id', $telegram_id);
+        return $this->db->get('users')->row_array();
     }
 
     /**
@@ -52,30 +57,48 @@ class User_model extends CI_Model {
      */
     public function get_all_users()
     {
-        $query = $this->db->get('user');
+        $query = $this->db->get('users');
         return $query->result_array();
     }
 
     /**
-     * Get a user by ID.
-     * @param int $id The user ID.
+     * Get a user by their internal auto-increment ID.
+     * @param int $id The internal ID.
      * @return array|null The user record or null if not found.
      */
     public function get_user_by_id($id)
     {
-        $query = $this->db->get_where('user', array('id' => $id));
+        $query = $this->db->get_where('users', array('id' => $id));
         return $query->row_array();
     }
 
     /**
-     * Update user information.
-     * @param int $id The user ID.
+     * Update user information by their internal auto-increment ID.
+     * @param int $id The internal user ID.
      * @param array $data The data to update.
      * @return bool True on success, false on failure.
      */
     public function update_user($id, $data)
     {
         $this->db->where('id', $id);
-        return $this->db->update('user', $data);
+        return $this->db->update('users', $data);
+    }
+
+    /**
+     * Check if a user has a specific role.
+     * @param int $user_id The user's Telegram ID.
+     * @param string $role_name The name of the role to check.
+     * @return bool True if the user has the role, false otherwise.
+     */
+    public function has_role($user_id, $role_name)
+    {
+        $this->db->select('1');
+        $this->db->from('user_roles ur');
+        $this->db->join('roles r', 'ur.role_id = r.id');
+        $this->db->where('ur.user_id', $user_id);
+        $this->db->where('r.name', $role_name);
+        $query = $this->db->get();
+
+        return $query->num_rows() > 0;
     }
 }

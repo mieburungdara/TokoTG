@@ -69,7 +69,7 @@ class Auth extends CI_Controller {
             return false;
         }
 
-        $bot = $this->db->get_where('bots', ['id' => $bot_id])->row();
+        $bot = $this->db->get_where('bots', ['bot_id' => $bot_id])->row();
         if (!$bot) {
             log_message('error', 'Validation failed: Bot with ID ' . $bot_id . ' not found.');
             return false;
