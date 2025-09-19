@@ -9,6 +9,10 @@ class MY_Controller extends CI_Controller {
     {
         parent::__construct();
 
+        // Load necessary models and libraries for all child controllers
+        $this->load->library('session');
+        $this->load->model('User_model');
+
         // Load the template library and config
         $this->load->library('template');
         $this->config->load('template');
@@ -44,7 +48,6 @@ class MY_Controller extends CI_Controller {
         $this->dm->l_footer_fixed = $this->config->item('dm_l_footer_fixed');
         $this->dm->l_m_content = $this->config->item('dm_l_m_content');
         $this->dm->main_nav_active = $this->config->item('dm_main_nav_active');
-        $this->dm->main_nav = $this->config->item('dm_main_nav');
         $this->dm->inc_side_overlay = $this->config->item('dm_inc_side_overlay');
         $this->dm->inc_sidebar = $this->config->item('dm_inc_sidebar');
         $this->dm->inc_header = $this->config->item('dm_inc_header');
@@ -53,6 +56,37 @@ class MY_Controller extends CI_Controller {
 
     public function render($view, $data = array())
     {
+        // --- DYNAMIC NAVIGATION LOGIC ---
+        $navigation = [];
+        $user_id = $this->session->userdata('user_id');
+
+        if ($user_id) {
+            $roles = $this->User_model->get_user_roles($user_id);
+
+            // Default menu for all logged-in users
+            $navigation[] = ['name' => 'Marketplace', 'icon' => 'fa fa-store', 'url' => site_url('miniapp/marketplace')];
+            $navigation[] = ['name' => 'My Orders', 'icon' => 'fa fa-receipt', 'url' => site_url('orders')];
+
+            // Seller-specific menu
+            if (in_array('seller', $roles)) {
+                $navigation[] = ['name' => 'Seller Menu', 'type' => 'heading'];
+                $navigation[] = ['name' => 'My Products', 'icon' => 'fa fa-box-open', 'url' => site_url('seller/products')];
+            }
+
+            // Admin-specific menu
+            if (in_array('admin', $roles)) {
+                $navigation[] = ['name' => 'Admin Panel', 'type' => 'heading'];
+                $navigation[] = ['name' => 'Add Balance', 'icon' => 'fa fa-money-bill-wave', 'url' => site_url('admin/add_balance')];
+            }
+        } else {
+            // Menu for non-logged-in users (public)
+            $navigation[] = ['name' => 'Marketplace', 'icon' => 'fa fa-store', 'url' => site_url('miniapp/marketplace')];
+            $navigation[] = ['name' => 'Login', 'icon' => 'fa fa-sign-in-alt', 'url' => site_url('miniapp_auth')];
+        }
+
+        $this->dm->main_nav = $navigation;
+        // --- END DYNAMIC NAVIGATION LOGIC ---
+
         $data['dm'] = $this->dm;
         $data['main_content'] = $this->load->view($view, $data, TRUE);
         $this->load->view('backend_template', $data);

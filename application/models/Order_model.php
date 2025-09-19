@@ -68,4 +68,17 @@ class Order_model extends CI_Model {
 
         return $order_id;
     }
+
+    /**
+     * Get all orders for a specific user.
+     * @param int $user_id The user's Telegram ID.
+     * @return array An array of order records.
+     */
+    public function get_orders_by_user($user_id)
+    {
+        $this->db->where('user_id', $user_id);
+        $this->db->order_by('created_at', 'DESC');
+        $query = $this->db->get('orders');
+        return $query->result_array();
+    }
 }

@@ -101,4 +101,35 @@ class User_model extends CI_Model {
 
         return $query->num_rows() > 0;
     }
+
+    /**
+     * Get all roles for a specific user.
+     * @param int $user_id The user's Telegram ID.
+     * @return array An array of role names (e.g., ['customer', 'admin']).
+     */
+    public function get_user_roles($user_id)
+    {
+        $this->db->select('r.name');
+        $this->db->from('user_roles ur');
+        $this->db->join('roles r', 'ur.role_id = r.id');
+        $this->db->where('ur.user_id', $user_id);
+        $query = $this->db->get();
+
+        $roles = [];
+        foreach ($query->result_array() as $row) {
+            $roles[] = $row['name'];
+        }
+        return $roles;
+    }
+
+    /**
+     * Get a seller's profile by their user_id.
+     * @param int $user_id The user's Telegram ID.
+     * @return array|null The seller record or null if not found.
+     */
+    public function get_seller_by_user_id($user_id)
+    {
+        $query = $this->db->get_where('sellers', array('user_id' => $user_id));
+        return $query->row_array();
+    }
 }
