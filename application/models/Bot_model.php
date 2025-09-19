@@ -37,13 +37,13 @@ class Bot_model extends CI_Model {
     public function update_bot($id, $data)
     {
         $data['updated_at'] = date('Y-m-d H:i:s');
-        $this->db->where('id', $id);
+        $this->db->where('bot_id', $id);
         return $this->db->update('bots', $data);
     }
 
     public function delete_bot($id)
     {
-        $this->db->where('id', $id);
+        $this->db->where('bot_id', $id);
         return $this->db->delete('bots');
     }
 

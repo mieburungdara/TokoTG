@@ -4,6 +4,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 use Longman\TelegramBot\Telegram;
 use Longman\TelegramBot\Exception\TelegramException;
 
+// Load our custom Telegram class
+require_once APPPATH . 'libraries/CustomTelegram.php';
+
 class Getupdates extends CI_Controller {
 
     public function __construct()
@@ -35,17 +38,12 @@ class Getupdates extends CI_Controller {
                     continue;
                 }
 
-                // Initialize Telegram object with the first bot
+                // Initialize Telegram object with the first bot using our custom class
                 $first_bot = $bots[0];
-                $telegram = new Telegram($first_bot['api_key'], $first_bot['username']);
+                $telegram = new CustomTelegram($first_bot['api_key'], $first_bot['username']);
 
-                // Enable MySQL
-                $telegram->enableMySql([
-                    'host'     => $this->db->hostname,
-                    'user'     => $this->db->username,
-                    'password' => $this->db->password,
-                    'database' => $this->db->database,
-                ]);
+                // Custom database logic is now handled in commands via CI models.
+                // The old enableMySql() call has been removed.
 
                 // Add other bots
                 for ($i = 1; $i < count($bots); $i++) {

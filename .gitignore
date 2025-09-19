@@ -35,3 +35,4 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 
 # File untuk menyimpan variabel lingkungan, seperti Ngrok Authtoken
 .env
+\n# Log files\nserveo.log
