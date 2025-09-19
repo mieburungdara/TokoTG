@@ -42,6 +42,17 @@ class Getupdates extends CI_Controller {
                 $first_bot = $bots[0];
                 $telegram = new CustomTelegram($first_bot['api_key'], $first_bot['username']);
 
+                // Enable MySQL for the Telegram library's internal use (e.g., update offset)
+                $telegram->enableMySql([
+                    'host'        => $this->db->hostname,
+                    'user'        => $this->db->username,
+                    'password'    => $this->db->password,
+                    'database'    => $this->db->database,
+                    'log_user'    => false, // Disable redundant logging
+                    'log_chat'    => false, // Disable redundant logging
+                    'log_message' => false, // Disable redundant logging
+                ]);
+
                 // Custom database logic is now handled in commands via CI models.
                 // The old enableMySql() call has been removed.
 
